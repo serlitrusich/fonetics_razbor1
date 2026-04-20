@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Фонетический разбор — игровой тренажёр</title>
+  <style>
+    :root {
+      --bg: #eef5ff;
+      --card: rgba(255, 255, 255, 0.92);
+      --primary: #0d47a1;
+      --primary-2: #1565c0;
+      --primary-3: #1976d2;
+      --accent: #42a5f5;
+      --dark: #082b62;
+      --text: #16304f;
+      --muted: #5b7193;
+      --success-bg: #dff7e7;
+      --success-text: #177245;
+      --error-bg: #ffe2e2;
+      --error-text: #b42318;
+      --border: #cfe0ff;
+      --shadow: 0 12px 30px rgba(13, 71, 161, 0.12);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(66,165,245,0.25), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(13,71,161,0.18), transparent 35%),
+        linear-gradient(135deg, #f5f9ff 0%, #e7f0ff 45%, #eef5ff 100%);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .shape {
+      position: fixed;
+      z-index: 0;
+      border-radius: 50%;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+
+    .shape1 {
+      width: 180px;
+      height: 180px;
+      background: var(--accent);
+      top: 40px;
+      left: -50px;
+    }
+
+    .shape2 {
+      width: 220px;
+      height: 220px;
+      background: var(--primary);
+      bottom: -60px;
+      right: -70px;
+    }
+
+    .shape3 {
+      width: 110px;
+      height: 110px;
+      background: var(--primary-3);
+      top: 30%;
+      right: 8%;
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      font-size: clamp(26px, 4vw, 40px);
+      font-weight: 700;
+      color: var(--dark);
+      margin: 0;
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .resource-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 12px 14px;
+      min-width: 280px;
+      max-width: 100%;
+    }
+
+    .resource-box strong {
+      display: block;
+      color: var(--dark);
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .resource-link-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .resource-link-row a,
+    .resource-link-row span {
+      color: var(--primary);
+      font-size: 14px;
+      word-break: break-all;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .instruction-list {
+      margin: 18px 0 24px;
+      padding-left: 20px;
+      line-height: 1.7;
+    }
+
+    .instruction-list li {
+      margin-bottom: 8px;
+    }
+
+    .btn {
+      appearance: none;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+      min-height: 46px;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-3));
+      color: white;
+      box-shadow: 0 8px 18px rgba(25, 118, 210, 0.28);
+    }
+
+    .btn-secondary {
+      background: #e8f1ff;
+      color: var(--primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .progress {
+      font-weight: 700;
+      color: var(--primary);
+      background: #eaf3ff;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 14px;
+    }
+
+    .word-box {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .word-main {
+      background: linear-gradient(135deg, #eff6ff, #dfeeff);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .word-label {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .word-value {
+      font-size: clamp(28px, 5vw, 40px);
+      font-weight: 800;
+      color: var(--dark);
+      letter-spacing: 0.4px;
+    }
+
+    .transcription {
+      font-size: clamp(20px, 4vw, 28px);
+      color: var(--primary);
+      font-weight: 700;
+      margin-top: 6px;
+    }
+
+    .section-title {
+      margin: 22px 0 14px;
+      font-size: 20px;
+      color: var(--dark);
+    }
+
+    .sound-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .sound-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      background: #fbfdff;
+      transition: 0.2s ease;
+    }
+
+    .sound-card.error {
+      border-color: #f3a3a3;
+      background: #fff6f6;
+    }
+
+    .sound-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .pair {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .hint {
+      font-size: 13px;
+      color: var(--muted);
+      background: #eef5ff;
+      padding: 6px 10px;
+      border-radius: 999px;
+    }
+
+    .controls {
+      display: grid;
+      gap: 12px;
+    }
+
+    .select-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .select-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .select-block label {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid #bfd5fb;
+      background: white;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+    }
+
+    select:focus {
+      border-color: var(--primary-3);
+      box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.12);
+    }
+
+    .message {
+      display: none;
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      border-left: 6px solid transparent;
+    }
+
+    .message.show {
+      display: block;
+    }
+
+    .message.success {
+      background: var(--success-bg);
+      color: var(--success-text);
+      border-left-color: #22a06b;
+    }
+
+    .message.error {
+      background: var(--error-bg);
+      color: var(--error-text);
+      border-left-color: #d92d20;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .footer-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .final-box {
+      text-align: center;
+      padding: 16px 6px 4px;
+    }
+
+    .final-box h2 {
+      margin-top: 0;
+      color: var(--dark);
+      font-size: 30px;
+    }
+
+    .final-box p {
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 760px) {
+      .card {
+        padding: 18px;
+      }
+
+      .select-row {
+        grid-template-columns: 1fr;
+      }
+
+      .pair {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shape shape1"></div>
+  <div class="shape shape2"></div>
+  <div class="shape shape3"></div>
+
+  <div class="wrapper">
+    <div class="topbar">
+      <div>
+        <h1 class="title">Фонетический разбор</h1>
+        <p class="subtitle">Игровой тренажёр для учеников</p>
+      </div>
+
+      <div class="resource-box">
+        <strong>Ссылка на ресурс</strong>
+        <div class="resource-link-row">
+          <a id="resourceLink" href="#" target="_blank" rel="noopener">Здесь появится ссылка после публикации</a>
+          <button class="btn btn-secondary" id="copyLinkBtn" type="button">Скопировать</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Экран инструкции -->
+    <section id="startScreen" class="screen active card">
+      <h2 style="margin-top:0; color: var(--dark);">Инструкция</h2>
+      <ol class="instruction-list">
+        <li>На экране появляется одно слово и его фонетическая транскрипция.</li>
+        <li>Для каждого звука нужно выбрать, какой он: <strong>гласный</strong> или <strong>согласный</strong>.</li>
+        <li>Если звук гласный, выберите: <strong>ударный</strong> или <strong>безударный</strong>.</li>
+        <li>Если звук согласный, выберите:
+          <strong>звонкий парный / звонкий непарный / глухой парный / глухой непарный</strong>
+          и
+          <strong>твёрдый парный / твёрдый непарный / мягкий парный / мягкий непарный</strong>.
+        </li>
+        <li>После заполнения нажмите <strong>«Проверить»</strong>.</li>
+        <li>Если всё верно, появится зелёное сообщение <strong>«Молодец, всё правильно»</strong> и кнопка <strong>«Перейти к следующему слову»</strong>.</li>
+        <li>Если есть ошибка, появится красное сообщение <strong>«Допущена ошибка»</strong>.</li>
+      </ol>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="startBtn">Начать игру</button>
+      </div>
+    </section>
+
+    <!-- Экран игры -->
+    <section id="gameScreen" class="screen card">
+      <div class="game-header">
+        <div class="progress" id="progressText">Слово 1 из 15</div>
+        <button class="btn btn-secondary" id="restartBtn" type="button">Начать заново</button>
+      </div>
+
+      <div class="word-box">
+        <div class="word-main">
+          <div class="word-label">Слово</div>
+          <div class="word-value" id="wordText">мяч</div>
+          <div class="word-label" style="margin-top:12px;">Фонетическая транскрипция</div>
+          <div class="transcription" id="transcriptionText">[ м' а ч' ]</div>
+        </div>
+      </div>
+
+      <h3 class="section-title">Определи признаки каждого звука</h3>
+      <div id="soundList" class="sound-list"></div>
+
+      <div id="messageBox" class="message"></div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="checkBtn" type="button">Проверить</button>
+        <button class="btn btn-secondary" id="nextBtn" type="button" style="display:none;">Перейти к следующему слову</button>
+      </div>
+    </section>
+
+    <!-- Экран завершения -->
+    <section id="endScreen" class="screen card">
+      <div class="final-box">
+        <h2>Игра окончена!</h2>
+        <p id="finalText">Ты прошёл весь тренажёр.</p>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn btn-primary" id="playAgainBtn" type="button">Играть снова</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      Адаптивная страница: работает на компьютере, телефоне и планшете.
+    </div>
+  </div>
+
+  <script>
+    const TYPE_OPTIONS = ["гласный", "согласный"];
+    const VOWEL_OPTIONS = ["ударный", "безударный"];
+    const VOICE_OPTIONS = ["звонкий парный", "звонкий непарный", "глухой парный", "глухой непарный"];
+    const HARDNESS_OPTIONS = ["твёрдый парный", "твёрдый непарный", "мягкий парный", "мягкий непарный"];
+
+    const words = [
+      {
+        word: "мяч",
+        transcription: "[ м' а ч' ]",
+        items: [
+          { letter: "м", sound: "[м']", type: "согласный", voice: "звонкий непарный", hardness: "мягкий парный" },
+          { letter: "я", sound: "[а]", type: "гласный", stress: "ударный" },
+          { letter: "ч", sound: "[ч']", type: "согласный", voice: "глухой непарный", hardness: "мягкий непарный" }
+        ]
+      },
+      {
+        word: "дом",
+        transcription: "[ д о м ]",
+        items: [
+          { letter: "д", sound: "[д]", type: "согласный", voice: "звонкий парный", hardness: "твёрдый парный" },
+          { letter: "о", sound: "[о]", type: "гласный", stress: "ударный" },
+          { letter: "м", sound: "[м]", type: "согласный", voice: "звонкий непарный", hardness: "твёрдый парный" }
+        ]
+      },
+      {
+        word: "река",
+        transcription: "[ р' и к а ]",
+        items: [
+          { letter: "р", sound: "[р']", type: "согласный", voice: "звонкий непарный", hardness: "мягкий парный" },
+          { letter: "е", sound: "[и]", type: "гласный", stress: "безударный" },
+          { letter: "к", sound: "[к]", type: "согласный", voice: "глухой парный", hardness: "твёрдый парный" },
+          { letter: "а", sound: "[а]", type: "гласный", stress: "ударный" }
+        ]
+      },
+      {
+        word: "школа",
+        transcription: "[ ш к о л а ]",
+        items: [
+          { letter: "ш", sound: "[ш]", type: "согласный", voice: "глухой парный", hardness: "твёрдый непарный" },
+          { letter: "к", sound: "[к]", type: "согласный", voice: "глухой парный", hardness: "твёрдый парный" },
+          { letter: "о", sound: "[о]", type: "гласный", stress: "ударный" },
+          { letter: "л", sound: "[л]", type: "согласный", voice: "звонкий непарный", hardness: "твёрдый парный" },
+          { letter: "а", sound: "[а]", type: "гласный", stress: "безударный" }
+        ]
+      },
+      {
+        word: "чашка",
+        transcription: "[ ч' а ш к а ]",
+        items: [
+          { letter: "ч", sound: "[ч']", type: "согласный", voice: "глухой непарный", hardness: "мягкий непарный" },
+          { letter: "а", sound: "[а]", type: "гласный", stress: "ударный" },
+          { letter: "ш", sound: "[ш]", type: "согласный", voice: "глухой парный", hardness: "твёрдый непарный" },
+          { letter: "к", sound: "[к]", type: "согласный", voice: "глухой парный", hardness: "твёрдый парный" },
+          { letter: "а", sound: "[а]", type: "гласный", stress: "безударный" }
+        ]
+      },
+      {
+        word: "гриб",
+        transcription: "[ г р' и п ]",
+        items: [
+          { letter: "г", sound: "[г]", type: "согласный", voice: "звонкий парный", hardness: "твёрдый парный" },
+          { letter: "р", sound: "[р']", type: "согласный", voice: "звонкий непарный", hardness: "мягкий парный" },
+          { letter: "и", sound: "[и]", type: "гласный", stress: "ударный" },
+          { letter: "б", sound: "[п]", type: "согласный", voice: "глухой парный", hardness: "твёрдый парный" }
+        ]
+      },
+      {
+        word: "сад",
+        transcription: "[ с а т ]",
+        items: [
+          { letter: "с", sound: "[с]", type: "согласный", voice: "глухой парный", hardness: "твёрдый парный" },
+          { letter: "а", sound: "[а]", type: "гласный", stress: "ударный" },
+          { letter: "д", sound: "[т]", type: "согласный", voice: "глухой парный", hardness: "твёрдый парный" }
+        ]
+      },
+      {
+        word: "луна",
+        transcription: "[ л у н а ]",
+        items: [
+          { letter: "л", sound: "[л]", type: "согласный", voice: "звонкий непарный", hardness: "твёрдый парный" },
+          { letter: "у", sound: "[у]", type: "гласный", stress: "безударный" },
+          { letter: "н", sound: "[н]", type: "согласный", voice: "звонкий непарный", hardness: "твёрдый парный" },
+          { letter: "а", sound: "[а]", type: "гласный", stress: "ударный" }
+        ]
+      },
+      {
+        word: "книга",
+        transcription: "[ к н' и г а ]",
+        items: [
+          { letter: "к", sound: "[к]", type: "согласный", voice: "глухой парный", hardness: "твёрдый парный" },
+          { letter: "н", sound: "[н']", type: "согласный", voice: "звонкий непарный", hardness: "мягкий парный" },
+          { letter: "и", sound: "[и]", type: "гласный", stress: "ударный" },
+          { letter: "г", sound: "[г]", type: "согласный", voice: "звонкий парный", hardness: "твёрдый парный" },
+          { letter: "а", sound: "[а]", type: "гласный", stress: "безударный" }
+        ]
+      },
+      {
+        word: "машина",
+        transcription: "[ м а ш ы н а ]",
+        items: [
+          { letter: "м", sound: "[м]", type: "согласный", voice: "звонкий непарный", hardness: "твёрдый парный" },
+          { letter: "а", sound: "[а]", type: "гласный", stress: "безударный" },
+          { letter: "ш", sound: "[ш]", type: "согласный", voice: "глухой парный", hardness: "твёрдый непарный" },
+          { letter: "и", sound: "[ы]", type: "гласный", stress: "ударный" },
+          { letter: "н", sound: "[н]", type: "согласный", voice: "звонкий непарный", hardness: "твёрдый парный" },
+          { letter: "а", sound: "[а]", type: "гласный", stress: "безударный" }
+        ]
+      },
+      {
+        word: "берёза",
+        transcription: "[ б' и р' о з а ]",
+        items: [
+          { letter: "б", sound: "[б']", type: "согласный", voice: "звонкий парный", hardness: "мягкий парный" },
+          { letter: "е", sound: "[и]", type: "гласный", stress: "безударный" },
+          { letter: "р", sound: "[р']", type: "согласный", voice: "звонкий непарный", hardness: "мягкий парный" },
+          { letter: "ё", sound: "[о]", type: "гласный", stress: "ударный" },
+          { letter: "з", sound: "[з]", type: "согласный", voice: "звонкий парный", hardness: "твёрдый парный" },
+          { letter: "а", sound: "[а]", type: "гласный", stress: "безударный" }
+        ]
+      },
+      {
+        word: "щука",
+        transcription: "[ щ' у к а ]",
+        items: [
+          { letter: "щ", sound: "[щ']", type: "согласный", voice: "глухой непарный", hardness: "мягкий непарный" },
+          { letter: "у", sound: "[у]", type: "гласный", stress: "ударный" },
+          { letter: "к", sound: "[к]", type: "согласный", voice: "глухой парный", hardness: "твёрдый парный" },
+          { letter: "а", sound: "[а]", type: "гласный", stress: "безударный" }
+        ]
+      },
+      {
+        word: "чайка",
+        transcription: "[ ч' а й' к а ]",
+        items: [
+          { letter: "ч", sound: "[ч']", type: "согласный", voice: "глухой непарный", hardness: "мягкий непарный" },
+          { letter: "а", sound: "[а]", type: "гласный", stress: "ударный" },
+          { letter: "й", sound: "[й']", type: "согласный", voice: "звонкий непарный", hardness: "мягкий непарный" },
+          { letter: "к", sound: "[к]", type: "согласный", voice: "глухой парный", hardness: "твёрдый парный" },
+          { letter: "а", sound: "[а]", type: "гласный", stress: "безударный" }
+        ]
+      },
+      {
+        word: "моряк",
+        transcription: "[ м а р' а к ]",
+        items: [
+          { letter: "м", sound: "[м]", type: "согласный", voice: "звонкий непарный", hardness: "твёрдый парный" },
+          { letter: "о", sound: "[а]", type: "гласный", stress: "безударный" },
+          { letter: "р", sound: "[р']", type: "согласный", voice: "звонкий непарный", hardness: "мягкий парный" },
+          { letter: "я", sound: "[а]", type: "гласный", stress: "ударный" },
+          { letter: "к", sound: "[к]", type: "согласный", voice: "глухой парный", hardness: "твёрдый парный" }
+        ]
+      },
+      {
+        word: "рыба",
+        transcription: "[ р ы б а ]",
+        items: [
+          { letter: "р", sound: "[р]", type: "согласный", voice: "звонкий непарный", hardness: "твёрдый парный" },
+          { letter: "ы", sound: "[ы]", type: "гласный", stress: "ударный" },
+          { letter: "б", sound: "[б]", type: "согласный", voice: "звонкий парный", hardness: "твёрдый парный" },
+          { letter: "а", sound: "[а]", type: "гласный", stress: "безударный" }
+        ]
+      }
+    ];
+
+    let currentIndex = 0;
+
+    const startScreen = document.getElementById("startScreen");
+    const gameScreen = document.getElementById("gameScreen");
+    const endScreen = document.getElementById("endScreen");
+
+    const startBtn = document.getElementById("startBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const playAgainBtn = document.getElementById("playAgainBtn");
+    const checkBtn = document.getElementById("checkBtn");
+    const nextBtn = document.getElementById("nextBtn");
+
+    const progressText = document.getElementById("progressText");
+    const wordText = document.getElementById("wordText");
+    const transcriptionText = document.getElementById("transcriptionText");
+    const soundList = document.getElementById("soundList");
+    const messageBox = document.getElementById("messageBox");
+    const finalText = document.getElementById("finalText");
+
+    function showScreen(screen) {
+      [startScreen, gameScreen, endScreen].forEach(s => s.classList.remove("active"));
+      screen.classList.add("active");
+    }
+
+    function createOptions(options, placeholder = "Выберите") {
+      return `
+        <option value="">${placeholder}</option>
+        ${options.map(opt => `<option value="${opt}">${opt}</option>`).join("")}
+      `;
+    }
+
+    function renderWord() {
+      const currentWord = words[currentIndex];
+      progressText.textContent = `Слово ${currentIndex + 1} из ${words.length}`;
+      wordText.textContent = currentWord.word;
+      transcriptionText.textContent = currentWord.transcription;
+      nextBtn.style.display = "none";
+      checkBtn.disabled = false;
+      clearMessage();
+
+      soundList.innerHTML = "";
+
+      currentWord.items.forEach((item, idx) => {
+        const card = document.createElement("div");
+        card.className = "sound-card";
+        card.dataset.index = idx;
+
+        card.innerHTML = `
+          <div class="sound-top">
+            <div class="pair">${item.letter} — ${item.sound}</div>
+            <div class="hint">Сначала выберите: гласный или согласный</div>
+          </div>
+
+          <div class="controls">
+            <div class="select-row">
+              <div class="select-block">
+                <label>Тип звука</label>
+                <select class="type-select" data-index="${idx}">
+                  ${createOptions(TYPE_OPTIONS)}
+                </select>
+              </div>
+              <div class="extra-controls" id="extra-${idx}" style="display: contents;"></div>
+            </div>
+          </div>
+        `;
+
+        soundList.appendChild(card);
+      });
+
+      bindTypeEvents();
+    }
+
+    function bindTypeEvents() {
+      document.querySelectorAll(".type-select").forEach(select => {
+        select.addEventListener("change", (e) => {
+          const idx = e.target.dataset.index;
+          const value = e.target.value;
+          const extra = document.getElementById(`extra-${idx}`);
+          extra.innerHTML = "";
+
+          if (value === "гласный") {
+            extra.innerHTML = `
+              <div class="select-block">
+                <label>Признак гласного</label>
+                <select class="stress-select">
+                  ${createOptions(VOWEL_OPTIONS)}
+                </select>
+              </div>
+            `;
+          } else if (value === "согласный") {
+            extra.innerHTML = `
+              <div class="select-block">
+                <label>Звонкость / глухость</label>
+                <select class="voice-select">
+                  ${createOptions(VOICE_OPTIONS)}
+                </select>
+              </div>
+              <div class="select-block">
+                <label>Твёрдость / мягкость</label>
+                <select class="hardness-select">
+                  ${createOptions(HARDNESS_OPTIONS)}
+                </select>
+              </div>
+            `;
+          }
+        });
+      });
+    }
+
+    function clearMessage() {
+      messageBox.className = "message";
+      messageBox.textContent = "";
+    }
+
+    function showMessage(type, text) {
+      messageBox.className = `message show ${type}`;
+      messageBox.textContent = text;
+    }
+
+    function validateCurrentWord() {
+      const currentWord = words[currentIndex];
+      const cards = [...document.querySelectorAll(".sound-card")];
+      let allCorrect = true;
+
+      cards.forEach(card => card.classList.remove("error"));
+
+      cards.forEach((card, idx) => {
+        const correct = currentWord.items[idx];
+        const typeSelect = card.querySelector(".type-select");
+        const chosenType = typeSelect ? typeSelect.value : "";
+
+        let rowCorrect = true;
+
+        if (chosenType !== correct.type) {
+          rowCorrect = false;
+        }
+
+        if (correct.type === "гласный") {
+          const stressSelect = card.querySelector(".stress-select");
+          const chosenStress = stressSelect ? stressSelect.value : "";
+          if (chosenStress !== correct.stress) {
+            rowCorrect = false;
+          }
+        }
+
+        if (correct.type === "согласный") {
+          const voiceSelect = card.querySelector(".voice-select");
+          const hardnessSelect = card.querySelector(".hardness-select");
+
+          const chosenVoice = voiceSelect ? voiceSelect.value : "";
+          const chosenHardness = hardnessSelect ? hardnessSelect.value : "";
+
+          if (chosenVoice !== correct.voice || chosenHardness !== correct.hardness) {
+            rowCorrect = false;
+          }
+        }
+
+        if (!rowCorrect) {
+          allCorrect = false;
+          card.classList.add("error");
+        }
+      });
+
+      if (allCorrect) {
+        showMessage("success", "Молодец, всё правильно");
+        nextBtn.style.display = "inline-flex";
+        checkBtn.disabled = true;
+      } else {
+        showMessage("error", "Допущена ошибка");
+        nextBtn.style.display = "none";
+      }
+    }
+
+    function nextWord() {
+      currentIndex++;
+      if (currentIndex >= words.length) {
+        finalText.textContent = `Ты прошёл весь тренажёр: ${words.length} слов из ${words.length}. Отличная работа!`;
+        showScreen(endScreen);
+      } else {
+        renderWord();
+      }
+    }
+
+    function restartGame() {
+      currentIndex = 0;
+      renderWord();
+      showScreen(gameScreen);
+    }
+
+    function initResourceLink() {
+      const link = document.getElementById("resourceLink");
+      const copyBtn = document.getElementById("copyLinkBtn");
+      const href = window.location.href;
+
+      if (href.startsWith("file:")) {
+        link.textContent = "После публикации страницы здесь появится ссылка";
+        link.removeAttribute("href");
+      } else {
+        link.textContent = href;
+        link.href = href;
+      }
+
+      copyBtn.addEventListener("click", async () => {
+        try {
+          if (href.startsWith("file:")) {
+            alert("Сначала опубликуйте страницу в интернете, тогда появится ссылка для копирования.");
+            return;
+          }
+          await navigator.clipboard.writeText(href);
+          copyBtn.textContent = "Скопировано!";
+          setTimeout(() => {
+            copyBtn.textContent = "Скопировать";
+          }, 1500);
+        } catch (e) {
+          alert("Не удалось скопировать ссылку.");
+        }
+      });
+    }
+
+    startBtn.addEventListener("click", () => {
+      renderWord();
+      showScreen(gameScreen);
+    });
+
+    restartBtn.addEventListener("click", restartGame);
+    playAgainBtn.addEventListener("click", restartGame);
+    checkBtn.addEventListener("click", validateCurrentWord);
+    nextBtn.addEventListener("click", nextWord);
+
+    initResourceLink();
+  </script>
+</body>
+</html>

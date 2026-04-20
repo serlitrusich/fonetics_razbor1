@@ -1,0 +1,1 @@
+# fonetics_razbor1
